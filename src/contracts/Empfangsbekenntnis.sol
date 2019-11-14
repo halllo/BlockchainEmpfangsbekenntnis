@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-contract Marketplace {
+contract Empfangsbekenntnis {
     string public name;
     uint public productCount = 0;
     mapping(uint => Product) public products;
@@ -30,7 +30,7 @@ contract Marketplace {
     );
 
     constructor() public {
-        name = "Dapp University Marketplace";
+        name = "Empfangsbekenntnis ($174 Zivilprozessordnung)";
     }
 
     function createProduct(string memory _name, uint _price) public {

@@ -1,19 +1,19 @@
-const Marketplace = artifacts.require('./Marketplace.sol')
+const Empfangsbekenntnis = artifacts.require('./Empfangsbekenntnis.sol')
 
 require('chai')
   .use(require('chai-as-promised'))
   .should()
 
-contract('Marketplace', ([deployer, seller, buyer]) => {
-  let marketplace
+contract('Empfangsbekenntnis', ([deployer, seller, buyer]) => {
+  let empfangsbekenntnis
 
   before(async () => {
-    marketplace = await Marketplace.deployed()
+    empfangsbekenntnis = await Empfangsbekenntnis.deployed()
   })
 
   describe('deployment', async () => {
     it('deploys successfully', async () => {
-      const address = await marketplace.address
+      const address = await empfangsbekenntnis.address
       assert.notEqual(address, 0x0)
       assert.notEqual(address, '')
       assert.notEqual(address, null)
@@ -21,8 +21,8 @@ contract('Marketplace', ([deployer, seller, buyer]) => {
     })
 
     it('has a name', async () => {
-      const name = await marketplace.name()
-      assert.equal(name, 'Dapp University Marketplace')
+      const name = await empfangsbekenntnis.name()
+      assert.equal(name, 'Empfangsbekenntnis ($174 Zivilprozessordnung)')
     })
   })
 
@@ -30,8 +30,8 @@ contract('Marketplace', ([deployer, seller, buyer]) => {
     let result, productCount
 
     before(async () => {
-      result = await marketplace.createProduct('iPhone X', web3.utils.toWei('1', 'Ether'), { from: seller })
-      productCount = await marketplace.productCount()
+      result = await empfangsbekenntnis.createProduct('iPhone X', web3.utils.toWei('1', 'Ether'), { from: seller })
+      productCount = await empfangsbekenntnis.productCount()
     })
 
     it('creates products', async () => {
@@ -45,13 +45,13 @@ contract('Marketplace', ([deployer, seller, buyer]) => {
       assert.equal(event.purchased, false, 'purchased is correct')
 
       // FAILURE: Product must have a name
-      await await marketplace.createProduct('', web3.utils.toWei('1', 'Ether'), { from: seller }).should.be.rejected;
+      await await empfangsbekenntnis.createProduct('', web3.utils.toWei('1', 'Ether'), { from: seller }).should.be.rejected;
       // FAILURE: Product must have a price
-      await await marketplace.createProduct('iPhone X', 0, { from: seller }).should.be.rejected;
+      await await empfangsbekenntnis.createProduct('iPhone X', 0, { from: seller }).should.be.rejected;
     })
 
     it('lists products', async () => {
-      const product = await marketplace.products(productCount)
+      const product = await empfangsbekenntnis.products(productCount)
       assert.equal(product.id.toNumber(), productCount.toNumber(), 'id is correct')
       assert.equal(product.name, 'iPhone X', 'name is correct')
       assert.equal(product.price, '1000000000000000000', 'price is correct')
@@ -66,7 +66,7 @@ contract('Marketplace', ([deployer, seller, buyer]) => {
       oldSellerBalance = new web3.utils.BN(oldSellerBalance)
 
       // SUCCESS: Buyer makes purchase
-      result = await marketplace.purchaseProduct(productCount, { from: buyer, value: web3.utils.toWei('1', 'Ether')})
+      result = await empfangsbekenntnis.purchaseProduct(productCount, { from: buyer, value: web3.utils.toWei('1', 'Ether')})
 
       // Check logs
       const event = result.logs[0].args
@@ -90,13 +90,13 @@ contract('Marketplace', ([deployer, seller, buyer]) => {
       assert.equal(newSellerBalance.toString(), exepectedBalance.toString())
 
       // FAILURE: Tries to buy a product that does not exist, i.e., product must have valid id
-      await marketplace.purchaseProduct(99, { from: buyer, value: web3.utils.toWei('1', 'Ether')}).should.be.rejected;      // FAILURE: Buyer tries to buy without enough ether
+      await empfangsbekenntnis.purchaseProduct(99, { from: buyer, value: web3.utils.toWei('1', 'Ether')}).should.be.rejected;      // FAILURE: Buyer tries to buy without enough ether
       // FAILURE: Buyer tries to buy without enough ether
-      await marketplace.purchaseProduct(productCount, { from: buyer, value: web3.utils.toWei('0.5', 'Ether') }).should.be.rejected;
+      await empfangsbekenntnis.purchaseProduct(productCount, { from: buyer, value: web3.utils.toWei('0.5', 'Ether') }).should.be.rejected;
       // FAILURE: Deployer tries to buy the product, i.e., product can't be purchased twice
-      await marketplace.purchaseProduct(productCount, { from: deployer, value: web3.utils.toWei('1', 'Ether') }).should.be.rejected;
+      await empfangsbekenntnis.purchaseProduct(productCount, { from: deployer, value: web3.utils.toWei('1', 'Ether') }).should.be.rejected;
       // FAILURE: Buyer tries to buy again, i.e., buyer can't be the seller
-      await marketplace.purchaseProduct(productCount, { from: buyer, value: web3.utils.toWei('1', 'Ether') }).should.be.rejected;
+      await empfangsbekenntnis.purchaseProduct(productCount, { from: buyer, value: web3.utils.toWei('1', 'Ether') }).should.be.rejected;
     })
 
   })
