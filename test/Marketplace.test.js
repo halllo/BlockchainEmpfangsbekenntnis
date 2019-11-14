@@ -48,12 +48,13 @@ contract('Empfangsbekenntnis', ([deployer, sender, reader]) => {
     })
 
     it('lists documents', async () => {
-      const product = await empfangsbekenntnis.documents(documentCount)
-      assert.equal(product.id.toNumber(), documentCount.toNumber(), 'id is correct')
+      const document = await empfangsbekenntnis.documents(documentCount)
+      assert.equal(document.id.toNumber(), documentCount.toNumber(), 'id is correct')
       const docLinkHash = await empfangsbekenntnis.hashLink(1, 'doc1')
-      assert.equal(product.documentLinkHash, docLinkHash, 'link is correct')
-      assert.equal(product.sender, sender, 'sender is correct')
-      assert.equal(product.readCount, 0, 'readCount is correct')
+      assert.equal(document.documentLinkHash, docLinkHash, 'link is correct')
+      assert.equal(document.sender, sender, 'sender is correct')
+      assert.notEqual(document.sentAt, 0, 'sentAt is correct')
+      assert.equal(document.readCount, 0, 'readCount is correct')
     })
 
     it('read documents', async () => {
@@ -90,17 +91,18 @@ contract('Empfangsbekenntnis', ([deployer, sender, reader]) => {
     })
 
     it('lists documents after read', async () => {
-      const product = await empfangsbekenntnis.documents(documentCount)
-      assert.equal(product.id.toNumber(), documentCount.toNumber(), 'id is correct')
+      const document = await empfangsbekenntnis.documents(documentCount)
+      assert.equal(document.id.toNumber(), documentCount.toNumber(), 'id is correct')
       const docLinkHash = await empfangsbekenntnis.hashLink(1, 'doc1')
-      assert.equal(product.documentLinkHash, docLinkHash, 'link is correct')
-      assert.equal(product.sender, sender, 'sender is correct')
-      assert.equal(product.readCount, 2, 'readCount is correct')
+      assert.equal(document.documentLinkHash, docLinkHash, 'link is correct')
+      assert.equal(document.sender, sender, 'sender is correct')
+      assert.equal(document.readCount, 2, 'readCount is correct')
 
-      const reads = await empfangsbekenntnis.getReads(documentCount);
-      assert.equal(reads.length, 2, 'reads is correct')
-      assert.equal(reads[0], reader, 'read[0] is correct')
-      assert.equal(reads[1], reader, 'read[1] is correct')
+      const x = await empfangsbekenntnis.getReads(documentCount);
+      const readers = x[0];
+      assert.equal(readers.length, 2, 'readers is correct')
+      assert.equal(readers[0], reader, 'readers[0] is correct')
+      assert.equal(readers[1], reader, 'readers[1] is correct')
     })
 
   })

@@ -42,12 +42,20 @@ class App extends Component {
       for (var i = 1; i <= documentCount; i++) {
         const document = await empfangsbekenntnis.methods.documents(i).call()
         const documentReads = await empfangsbekenntnis.methods.getReads(i).call()
-        document.reads = documentReads;
+        document.readers = documentReads._readers;
+        document.readAt = documentReads._readAt;
         this.setState({
           documents: [...this.state.documents, document]
         })
       }
       this.setState({ loading: false})
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const documentId = urlParams.get('documentId');
+      const documentLink = urlParams.get('documentLink');
+      if (documentId && documentLink) {
+        this.readDocument(documentId, '', documentLink);
+      }
     } else {
       window.alert('Empfangsbekenntnis contract not deployed to detected network.')
     }
@@ -74,12 +82,13 @@ class App extends Component {
     })
   }
 
-  readDocument(id, documentLinkHash) {
+  readDocument(id, documentLinkHash, documentLink) {
     this.setState({ loading: true })
     console.info(id, documentLinkHash)
 
-    let documentLink = prompt("documentLink");
-    console.info(documentLink);
+    if (!documentLink) {
+      documentLink = prompt("documentLink");
+    }
 
     this.state.empfangsbekenntnis.methods.readDocument(id, documentLink).send({ from: this.state.account })
     .once('receipt', (receipt) => {

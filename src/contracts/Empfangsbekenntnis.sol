@@ -9,8 +9,10 @@ contract Empfangsbekenntnis {
         uint id;
         bytes32 documentLinkHash;
         address payable sender;
+        uint sentAt;
         uint readCount;
-        address[] reads;
+        address[] readers;
+        uint[] readAt;
     }
 
     event DocumentSent(
@@ -40,7 +42,8 @@ contract Empfangsbekenntnis {
         bytes32 _documentLinkHash = hashLink(documentCount, _documentLink);
         // Create the document
         address[] memory emptyAddressArray;
-        documents[documentCount] = Document(documentCount, _documentLinkHash, msg.sender, 0, emptyAddressArray);
+        uint[] memory emptyUintArray;
+        documents[documentCount] = Document(documentCount, _documentLinkHash, msg.sender, block.timestamp, 0, emptyAddressArray, emptyUintArray);
         // Trigger an event
         emit DocumentSent(documentCount, _documentLinkHash, msg.sender);
     }
@@ -60,8 +63,9 @@ contract Empfangsbekenntnis {
         require(_document.documentLinkHash == _documentLinkHash, "must read correct document");
         // Mark as read
         _document.readCount ++;
-        _document.reads.push(_reader);
-        // Update the document
+        _document.readers.push(_reader);
+        _document.readAt.push(block.timestamp);
+        // Update the document (no longer needed because of storage reference)
         //documents[_id] = _document;
         // Trigger an event
         emit DocumentRead(_document.id, _document.documentLinkHash, _document.sender, _reader, _document.readCount);
@@ -71,9 +75,10 @@ contract Empfangsbekenntnis {
         return keccak256(abi.encode(number, series));
     }
 
-    function getReads(uint256 id) public view returns (address[] memory) {
+    function getReads(uint256 id) public view returns (address[] memory _readers, uint[] memory _readAt) {
         // Fetch the document
         Document memory _document = documents[id];
-        return _document.reads;
+
+        return (_document.readers, _document.readAt);
     }
 }

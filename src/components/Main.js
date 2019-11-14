@@ -30,8 +30,10 @@ class Main extends Component {
               <th scope="col">#</th>
               <th scope="col">DocumentLink</th>
               <th scope="col">Sender</th>
+              <th scope="col">SentAt</th>
               <th scope="col"></th>
               <th scope="col">Readers</th>
+              <th scope="col">ReadAt</th>
             </tr>
           </thead>
           <tbody id="documentList">
@@ -41,6 +43,7 @@ class Main extends Component {
                   <th scope="row">{document.id.toString()}</th>
                   <td>{document.documentLinkHash}</td>
                   <td>{document.sender}</td>
+                  <td>{toDate(document.sentAt)}</td>
                   <td>
                     <button
                       name={document.id}
@@ -53,8 +56,13 @@ class Main extends Component {
                     </button>
                   </td>
                   <td>
-                    { document.reads.map(r => 
-                      <span>{r}, </span>
+                    { document.readers.map((read, readKey) => 
+                      <span key={key + '_reader' + readKey}>{read}, </span>
+                    )}
+                  </td>
+                  <td>
+                    { document.readAt.map((read, readKey) => 
+                      <span key={key + '_readAt' + readKey}>{toDate(read)}, </span>
                     )}
                   </td>
                 </tr>
@@ -65,6 +73,12 @@ class Main extends Component {
       </div>
     );
   }
+}
+
+function toDate(unixTimestamp) {
+  let unixTimestampDec = parseInt(unixTimestamp);
+  let dateObj = new Date(unixTimestampDec * 1000); 
+  return dateObj.toString();
 }
 
 export default Main;
