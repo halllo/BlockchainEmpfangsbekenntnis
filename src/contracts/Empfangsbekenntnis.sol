@@ -10,11 +10,7 @@ contract Empfangsbekenntnis {
         bytes32 documentLinkHash;
         address payable sender;
         uint readCount;
-        mapping(uint => Read) reads;
-    }
-
-    struct Read {
-        address payable reader;
+        address[] reads;
     }
 
     event DocumentSent(
@@ -43,7 +39,8 @@ contract Empfangsbekenntnis {
         // Hash document link to prevent putting clear text link on chain. Different hashes for same document because of documentNumber in Hash.
         bytes32 _documentLinkHash = hashLink(documentCount, _documentLink);
         // Create the document
-        documents[documentCount] = Document(documentCount, _documentLinkHash, msg.sender, 0);
+        address[] memory emptyAddressArray;
+        documents[documentCount] = Document(documentCount, _documentLinkHash, msg.sender, 0, emptyAddressArray);
         // Trigger an event
         emit DocumentSent(documentCount, _documentLinkHash, msg.sender);
     }
@@ -63,7 +60,7 @@ contract Empfangsbekenntnis {
         require(_document.documentLinkHash == _documentLinkHash, "must read correct document");
         // Mark as read
         _document.readCount ++;
-        _document.reads[_document.readCount] = Read(_reader);
+        _document.reads.push(_reader);
         // Update the document
         //documents[_id] = _document;
         // Trigger an event
@@ -72,5 +69,11 @@ contract Empfangsbekenntnis {
 
     function hashLink(uint256 number, string memory series) public pure returns (bytes32) {
         return keccak256(abi.encode(number, series));
+    }
+
+    function getReads(uint256 id) public view returns (address[] memory) {
+        // Fetch the document
+        Document memory _document = documents[id];
+        return _document.reads;
     }
 }

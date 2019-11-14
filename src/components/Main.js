@@ -5,67 +5,58 @@ class Main extends Component {
   render() {
     return (
       <div id="content">
-        <h1>Add Product</h1>
+        <h1>Send Document</h1>
         <form onSubmit={(event) => {
           event.preventDefault()
-          const name = this.productName.value
-          const price = window.web3.utils.toWei(this.productPrice.value.toString(), 'Ether')
-          this.props.createProduct(name, price)
+          const documentLink = this.documentLink.value
+          this.props.sendDocument(documentLink)
         }}>
           <div className="form-group mr-sm-2">
             <input
-              id="productName"
+              id="documentLink"
               type="text"
-              ref={(input) => { this.productName = input }}
+              ref={(input) => { this.documentLink = input }}
               className="form-control"
-              placeholder="Product Name"
+              placeholder="Document Link"
               required />
           </div>
-          <div className="form-group mr-sm-2">
-            <input
-              id="productPrice"
-              type="text"
-              ref={(input) => { this.productPrice = input }}
-              className="form-control"
-              placeholder="Product Price"
-              required />
-          </div>
-          <button type="submit" className="btn btn-primary">Add Product</button>
+          <button type="submit" className="btn btn-primary">Send Document</button>
         </form>
         <p>&nbsp;</p>
-        <h2>Buy Product</h2>
+        <h2>Read Document</h2>
         <table className="table">
           <thead>
             <tr>
               <th scope="col">#</th>
-              <th scope="col">Name</th>
-              <th scope="col">Price</th>
-              <th scope="col">Owner</th>
+              <th scope="col">DocumentLink</th>
+              <th scope="col">Sender</th>
               <th scope="col"></th>
+              <th scope="col">Readers</th>
             </tr>
           </thead>
-          <tbody id="productList">
-            { this.props.products.map((product, key) => {
+          <tbody id="documentList">
+            { this.props.documents.map((document, key) => {
               return(
                 <tr key={key}>
-                  <th scope="row">{product.id.toString()}</th>
-                  <td>{product.name}</td>
-                  <td>{window.web3.utils.fromWei(product.price.toString(), 'Ether')} Eth</td>
-                  <td>{product.owner}</td>
+                  <th scope="row">{document.id.toString()}</th>
+                  <td>{document.documentLinkHash}</td>
+                  <td>{document.sender}</td>
                   <td>
-                    { !product.purchased
-                      ? <button
-                          name={product.id}
-                          value={product.price}
-                          onClick={(event) => {
-                            this.props.purchaseProduct(event.target.name, event.target.value)
-                          }}
-                        >
-                          Buy
-                        </button>
-                      : null
-                    }
-                    </td>
+                    <button
+                      name={document.id}
+                      value={document.documentLinkHash}
+                      onClick={(event) => {
+                        this.props.readDocument(event.target.name, event.target.value)
+                      }}
+                    >
+                      Read
+                    </button>
+                  </td>
+                  <td>
+                    { document.reads.map(r => 
+                      <span>{r}, </span>
+                    )}
+                  </td>
                 </tr>
               )
             })}
