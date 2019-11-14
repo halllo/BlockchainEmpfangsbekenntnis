@@ -51,10 +51,9 @@ class App extends Component {
       this.setState({ loading: false})
       
       const urlParams = new URLSearchParams(window.location.search);
-      const documentId = urlParams.get('documentId');
       const documentLink = urlParams.get('documentLink');
-      if (documentId && documentLink) {
-        this.readDocument(documentId, '', documentLink);
+      if (documentLink) {
+        this.readDocument(documentLink);
       }
     } else {
       window.alert('Empfangsbekenntnis contract not deployed to detected network.')
@@ -82,15 +81,13 @@ class App extends Component {
     })
   }
 
-  readDocument(id, documentLinkHash, documentLink) {
+  readDocument(documentLink, id, documentLinkHash) {
     this.setState({ loading: true })
-    console.info(id, documentLinkHash)
-
     if (!documentLink) {
       documentLink = prompt("documentLink");
     }
-
-    this.state.empfangsbekenntnis.methods.readDocument(id, documentLink).send({ from: this.state.account })
+    console.info(documentLink);
+    this.state.empfangsbekenntnis.methods.readDocument(documentLink).send({ from: this.state.account })
     .once('receipt', (receipt) => {
       console.info('receipt', receipt);
       this.setState({ loading: false })

@@ -5,7 +5,7 @@ class Main extends Component {
   render() {
     return (
       <div id="content">
-        <h1>Send Document</h1>
+        <h1>Document</h1>
         <form onSubmit={(event) => {
           event.preventDefault()
           const documentLink = this.documentLink.value
@@ -21,19 +21,31 @@ class Main extends Component {
               required />
           </div>
           <button type="submit" className="btn btn-primary">Send Document</button>
+          <button className="btn btn-primary ml-2"
+            name="readDocument"
+            onClick={(event) => {
+              let documentLink = this.documentLink.value;
+              if (documentLink) {
+                this.props.readDocument(documentLink);
+              } else {
+                alert("enter document link");
+              }
+            }}
+          >
+            Read Document
+          </button>
         </form>
         <p>&nbsp;</p>
-        <h2>Read Document</h2>
+        <h2>Sent</h2>
         <table className="table">
           <thead>
             <tr>
               <th scope="col">#</th>
-              <th scope="col">DocumentLink</th>
+              <th scope="col">Document Link Hash</th>
               <th scope="col">Sender</th>
-              <th scope="col">SentAt</th>
-              <th scope="col"></th>
+              <th scope="col">Sent At</th>
               <th scope="col">Readers</th>
-              <th scope="col">ReadAt</th>
+              <th scope="col">Read At</th>
             </tr>
           </thead>
           <tbody id="documentList">
@@ -44,17 +56,6 @@ class Main extends Component {
                   <td>{document.documentLinkHash}</td>
                   <td>{document.sender}</td>
                   <td>{toDate(document.sentAt)}</td>
-                  <td>
-                    <button
-                      name={document.id}
-                      value={document.documentLinkHash}
-                      onClick={(event) => {
-                        this.props.readDocument(event.target.name, event.target.value)
-                      }}
-                    >
-                      Read
-                    </button>
-                  </td>
                   <td>
                     { document.readers.map((read, readKey) => 
                       <span key={key + '_reader' + readKey}>{read}, </span>

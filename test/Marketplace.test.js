@@ -22,7 +22,7 @@ contract('Empfangsbekenntnis', ([deployer, sender, reader]) => {
 
     it('has a name', async () => {
       const name = await empfangsbekenntnis.name()
-      assert.equal(name, 'Empfangsbekenntnis ($174 Zivilprozessordnung)')
+      assert.equal(name, 'Empfangsbekenntnis (§174 Zivilprozessordnung)')
     })
   })
 
@@ -39,7 +39,7 @@ contract('Empfangsbekenntnis', ([deployer, sender, reader]) => {
       assert.equal(documentCount, 1)
       const event = result.logs[0].args
       assert.equal(event.id.toNumber(), documentCount.toNumber(), 'id is correct')
-      const docLinkHash = await empfangsbekenntnis.hashLink(1, 'doc1')
+      const docLinkHash = await empfangsbekenntnis.hashLink('doc1')
       assert.equal(event.documentLinkHash, docLinkHash, 'link is correct')
       assert.equal(event.sender, sender, 'sender is correct')
 
@@ -50,7 +50,7 @@ contract('Empfangsbekenntnis', ([deployer, sender, reader]) => {
     it('lists documents', async () => {
       const document = await empfangsbekenntnis.documents(documentCount)
       assert.equal(document.id.toNumber(), documentCount.toNumber(), 'id is correct')
-      const docLinkHash = await empfangsbekenntnis.hashLink(1, 'doc1')
+      const docLinkHash = await empfangsbekenntnis.hashLink('doc1')
       assert.equal(document.documentLinkHash, docLinkHash, 'link is correct')
       assert.equal(document.sender, sender, 'sender is correct')
       assert.notEqual(document.sentAt, 0, 'sentAt is correct')
@@ -59,41 +59,39 @@ contract('Empfangsbekenntnis', ([deployer, sender, reader]) => {
 
     it('read documents', async () => {
       // SUCCESS: reader reads document
-      result = await empfangsbekenntnis.readDocument(documentCount, 'doc1', { from: reader })
+      result = await empfangsbekenntnis.readDocument('doc1', { from: reader })
       
       // Check logs
       const event = result.logs[0].args
       assert.equal(event.id.toNumber(), documentCount.toNumber(), 'id is correct')
-      const docLinkHash = await empfangsbekenntnis.hashLink(1, 'doc1')
+      const docLinkHash = await empfangsbekenntnis.hashLink('doc1')
       assert.equal(event.documentLinkHash, docLinkHash, 'link is correct')
       assert.equal(event.sender, sender, 'sender is correct')
       assert.equal(event.reader, reader, 'reader is correct')
       assert.equal(event.readCount, 1, 'read is correct')
 
       // FAILURE: Reader tries to read a document that does not exist, i.e., document must have valid id
-      await empfangsbekenntnis.readDocument(99, 'doc1', { from: reader }).should.be.rejected;
-      // FAILURE: Sender tries to read document, i.e., sender can't read his document
-      await empfangsbekenntnis.readDocument(documentCount, 'doc1', { from: sender }).should.be.rejected;
+      await empfangsbekenntnis.readDocument('doc11111', { from: reader }).should.be.rejected;
     })
 
     it('read document again', async () => {
-      // SUCCESS: reader reads document
-      result = await empfangsbekenntnis.readDocument(documentCount, 'doc1', { from: reader })
+      // SUCCESS: sender reads document
+      result = await empfangsbekenntnis.readDocument('doc1', { from: sender })
       
       // Check logs
       const event = result.logs[0].args
       assert.equal(event.id.toNumber(), documentCount.toNumber(), 'id is correct')
-      const docLinkHash = await empfangsbekenntnis.hashLink(1, 'doc1')
+      const docLinkHash = await empfangsbekenntnis.hashLink('doc1')
       assert.equal(event.documentLinkHash, docLinkHash, 'link is correct')
       assert.equal(event.sender, sender, 'sender is correct')
-      assert.equal(event.reader, reader, 'reader is correct')
+      assert.equal(event.reader, sender, 'reader is correct')
       assert.equal(event.readCount, 2, 'read is correct')
     })
 
     it('lists documents after read', async () => {
       const document = await empfangsbekenntnis.documents(documentCount)
       assert.equal(document.id.toNumber(), documentCount.toNumber(), 'id is correct')
-      const docLinkHash = await empfangsbekenntnis.hashLink(1, 'doc1')
+      const docLinkHash = await empfangsbekenntnis.hashLink('doc1')
       assert.equal(document.documentLinkHash, docLinkHash, 'link is correct')
       assert.equal(document.sender, sender, 'sender is correct')
       assert.equal(document.readCount, 2, 'readCount is correct')
@@ -102,7 +100,7 @@ contract('Empfangsbekenntnis', ([deployer, sender, reader]) => {
       const readers = x[0];
       assert.equal(readers.length, 2, 'readers is correct')
       assert.equal(readers[0], reader, 'readers[0] is correct')
-      assert.equal(readers[1], reader, 'readers[1] is correct')
+      assert.equal(readers[1], sender, 'readers[1] is correct')
     })
 
   })
