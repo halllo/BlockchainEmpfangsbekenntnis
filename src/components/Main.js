@@ -32,7 +32,7 @@ class Main extends Component {
               }
             }}
           >
-            Read Document
+            Receive Document
           </button>
         </form>
         <p>&nbsp;</p>
@@ -44,8 +44,8 @@ class Main extends Component {
               <th scope="col">Document Link Hash</th>
               <th scope="col">Sender</th>
               <th scope="col">Sent At</th>
-              <th scope="col">Readers</th>
-              <th scope="col">Read At</th>
+              <th scope="col">Received By</th>
+              <th scope="col">Received At</th>
             </tr>
           </thead>
           <tbody id="documentList">
