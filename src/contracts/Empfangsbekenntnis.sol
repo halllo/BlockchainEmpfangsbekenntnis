@@ -2,72 +2,74 @@ pragma solidity ^0.5.0;
 
 contract Empfangsbekenntnis {
     string public name;
-    uint public productCount = 0;
-    mapping(uint => Product) public products;
+    uint public documentCount = 0;
+    mapping(uint => Document) public documents;
 
-    struct Product {
+    struct Document {
         uint id;
-        string name;
-        uint price;
-        address payable owner;
-        bool purchased;
+        bytes32 documentLinkHash;
+        address payable sender;
+        address payable reader;
+        bool read;
     }
 
-    event ProductCreated(
+    event DocumentSent(
         uint id,
-        string name,
-        uint price,
-        address payable owner,
-        bool purchased
+        bytes32 documentLinkHash,
+        address payable sender,
+        bool read
     );
 
-    event ProductPurchased(
+    event DocumentRead(
         uint id,
-        string name,
-        uint price,
-        address payable owner,
-        bool purchased
+        bytes32 documentLinkHash,
+        address payable sender,
+        address payable reader,
+        bool read
     );
 
     constructor() public {
         name = "Empfangsbekenntnis ($174 Zivilprozessordnung)";
     }
 
-    function createProduct(string memory _name, uint _price) public {
+    function sendDocument(string memory _documentLink) public {
         // Require a valid name
-        require(bytes(_name).length > 0);
-        // Require a valid price
-        require(_price > 0);
+        require(bytes(_documentLink).length > 0, "must have a document link");
         // Increment product count
-        productCount ++;
+        documentCount ++;
+        // Hash document link to prevent putting clear text link on chain. Different hashes for same document because of documentNumber in Hash.
+        bytes32 _documentLinkHash = hashLink(documentCount, _documentLink);
         // Create the product
-        products[productCount] = Product(productCount, _name, _price, msg.sender, false);
+        documents[documentCount] = Document(documentCount, _documentLinkHash, msg.sender, address(0), false);
         // Trigger an event
-        emit ProductCreated(productCount, _name, _price, msg.sender, false);
+        emit DocumentSent(documentCount, _documentLinkHash, msg.sender, false);
     }
 
-    function purchaseProduct(uint _id) public payable {
+    function readDocument(uint _id, string memory _documentLink) public {
         // Fetch the product
-        Product memory _product = products[_id];
+        Document memory _document = documents[_id];
         // Fetch the owner
-        address payable _seller = _product.owner;
+        address payable _sender = _document.sender;
         // Make sure the product has a valid id
-        require(_product.id > 0 && _product.id <= productCount);
-        // Require that there is enough Ether in the transaction
-        require(msg.value >= _product.price);
+        require(_document.id > 0 && _document.id <= documentCount, "must use valid id");
         // Require that the product has not been purchased already
-        require(!_product.purchased);
+        require(!_document.read, "must read unread document");
         // Require that the buyer is not the seller
-        require(_seller != msg.sender);
+        require(_sender != msg.sender, "document reader must not be sender");
+        // Hash document link and check with stored hash to prevent fraudulent document reading.
+        bytes32 _documentLinkHash = hashLink(_id, _documentLink);
+        require(_document.documentLinkHash == _documentLinkHash, "must read correct document");
         // Transfer ownership to the buyer
-        _product.owner = msg.sender;
+        _document.reader = msg.sender;
         // Mark as purchased
-        _product.purchased = true;
+        _document.read = true;
         // Update the product
-        products[_id] = _product;
-        // Pay the seller by sending them Ether
-        address(_seller).transfer(msg.value);
+        documents[_id] = _document;
         // Trigger an event
-        emit ProductPurchased(productCount, _product.name, _product.price, msg.sender, true);
+        emit DocumentRead(_document.id, _document.documentLinkHash, _document.sender, _document.reader, true);
+    }
+
+    function hashLink(uint256 number, string memory series) public pure returns (bytes32) {
+        return keccak256(abi.encode(number, series));
     }
 }

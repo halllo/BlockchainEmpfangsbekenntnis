@@ -4,7 +4,7 @@ require('chai')
   .use(require('chai-as-promised'))
   .should()
 
-contract('Empfangsbekenntnis', ([deployer, seller, buyer]) => {
+contract('Empfangsbekenntnis', ([deployer, sender, reader]) => {
   let empfangsbekenntnis
 
   before(async () => {
@@ -26,77 +26,56 @@ contract('Empfangsbekenntnis', ([deployer, seller, buyer]) => {
     })
   })
 
-  describe('products', async () => {
-    let result, productCount
+  describe('documents', async () => {
+    let result, documentCount
 
     before(async () => {
-      result = await empfangsbekenntnis.createProduct('iPhone X', web3.utils.toWei('1', 'Ether'), { from: seller })
-      productCount = await empfangsbekenntnis.productCount()
+      result = await empfangsbekenntnis.sendDocument('doc1', { from: sender })
+      documentCount = await empfangsbekenntnis.documentCount()
     })
 
-    it('creates products', async () => {
+    it('sends documents', async () => {
       // SUCCESS
-      assert.equal(productCount, 1)
+      assert.equal(documentCount, 1)
       const event = result.logs[0].args
-      assert.equal(event.id.toNumber(), productCount.toNumber(), 'id is correct')
-      assert.equal(event.name, 'iPhone X', 'name is correct')
-      assert.equal(event.price, '1000000000000000000', 'price is correct')
-      assert.equal(event.owner, seller, 'owner is correct')
-      assert.equal(event.purchased, false, 'purchased is correct')
+      assert.equal(event.id.toNumber(), documentCount.toNumber(), 'id is correct')
+      const docLinkHash = await empfangsbekenntnis.hashLink(1, 'doc1')
+      assert.equal(event.documentLinkHash, docLinkHash, 'link is correct')
+      assert.equal(event.sender, sender, 'sender is correct')
+      assert.equal(event.read, false, 'read is correct')
 
-      // FAILURE: Product must have a name
-      await await empfangsbekenntnis.createProduct('', web3.utils.toWei('1', 'Ether'), { from: seller }).should.be.rejected;
-      // FAILURE: Product must have a price
-      await await empfangsbekenntnis.createProduct('iPhone X', 0, { from: seller }).should.be.rejected;
+      // FAILURE: document must have a link
+      await await empfangsbekenntnis.sendDocument('', { from: sender }).should.be.rejected;
     })
 
-    it('lists products', async () => {
-      const product = await empfangsbekenntnis.products(productCount)
-      assert.equal(product.id.toNumber(), productCount.toNumber(), 'id is correct')
-      assert.equal(product.name, 'iPhone X', 'name is correct')
-      assert.equal(product.price, '1000000000000000000', 'price is correct')
-      assert.equal(product.owner, seller, 'owner is correct')
-      assert.equal(product.purchased, false, 'purchased is correct')
+    it('lists documents', async () => {
+      const product = await empfangsbekenntnis.documents(documentCount)
+      assert.equal(product.id.toNumber(), documentCount.toNumber(), 'id is correct')
+      const docLinkHash = await empfangsbekenntnis.hashLink(1, 'doc1')
+      assert.equal(product.documentLinkHash, docLinkHash, 'link is correct')
+      assert.equal(product.sender, sender, 'sender is correct')
+      assert.equal(product.read, false, 'read is correct')
     })
 
-    it('sells products', async () => {
-      // Track the seller balance before purchase
-      let oldSellerBalance
-      oldSellerBalance = await web3.eth.getBalance(seller)
-      oldSellerBalance = new web3.utils.BN(oldSellerBalance)
-
-      // SUCCESS: Buyer makes purchase
-      result = await empfangsbekenntnis.purchaseProduct(productCount, { from: buyer, value: web3.utils.toWei('1', 'Ether')})
-
+    it('read documents', async () => {
+      // SUCCESS: reader reads document
+      result = await empfangsbekenntnis.readDocument(documentCount, 'doc1', { from: reader })
+      
       // Check logs
       const event = result.logs[0].args
-      assert.equal(event.id.toNumber(), productCount.toNumber(), 'id is correct')
-      assert.equal(event.name, 'iPhone X', 'name is correct')
-      assert.equal(event.price, '1000000000000000000', 'price is correct')
-      assert.equal(event.owner, buyer, 'owner is correct')
-      assert.equal(event.purchased, true, 'purchased is correct')
+      assert.equal(event.id.toNumber(), documentCount.toNumber(), 'id is correct')
+      const docLinkHash = await empfangsbekenntnis.hashLink(1, 'doc1')
+      assert.equal(event.documentLinkHash, docLinkHash, 'link is correct')
+      assert.equal(event.sender, sender, 'sender is correct')
+      assert.equal(event.reader, reader, 'reader is correct')
+      assert.equal(event.read, true, 'read is correct')
 
-      // Check that seller received funds
-      let newSellerBalance
-      newSellerBalance = await web3.eth.getBalance(seller)
-      newSellerBalance = new web3.utils.BN(newSellerBalance)
-
-      let price
-      price = web3.utils.toWei('1', 'Ether')
-      price = new web3.utils.BN(price)
-
-      const exepectedBalance = oldSellerBalance.add(price)
-
-      assert.equal(newSellerBalance.toString(), exepectedBalance.toString())
-
-      // FAILURE: Tries to buy a product that does not exist, i.e., product must have valid id
-      await empfangsbekenntnis.purchaseProduct(99, { from: buyer, value: web3.utils.toWei('1', 'Ether')}).should.be.rejected;      // FAILURE: Buyer tries to buy without enough ether
-      // FAILURE: Buyer tries to buy without enough ether
-      await empfangsbekenntnis.purchaseProduct(productCount, { from: buyer, value: web3.utils.toWei('0.5', 'Ether') }).should.be.rejected;
-      // FAILURE: Deployer tries to buy the product, i.e., product can't be purchased twice
-      await empfangsbekenntnis.purchaseProduct(productCount, { from: deployer, value: web3.utils.toWei('1', 'Ether') }).should.be.rejected;
-      // FAILURE: Buyer tries to buy again, i.e., buyer can't be the seller
-      await empfangsbekenntnis.purchaseProduct(productCount, { from: buyer, value: web3.utils.toWei('1', 'Ether') }).should.be.rejected;
+      // FAILURE: Reader tries to read a document that does not exist, i.e., document must have valid id
+      await empfangsbekenntnis.readDocument(99, 'doc1', { from: reader }).should.be.rejected;
+      // FAILURE: Sender tries to read document, i.e., sender can't read his document
+      await empfangsbekenntnis.readDocument(documentCount, 'doc1', { from: sender }).should.be.rejected;
+      // FAILURE: Reader tries to read again, i.e., reader can't read twice
+      await empfangsbekenntnis.readDocument(documentCount, 'doc1', { from: reader }).should.be.rejected;
     })
 
   })
