@@ -42,7 +42,6 @@ contract('Empfangsbekenntnis', ([deployer, sender, reader]) => {
       const docLinkHash = await empfangsbekenntnis.hashLink(1, 'doc1')
       assert.equal(event.documentLinkHash, docLinkHash, 'link is correct')
       assert.equal(event.sender, sender, 'sender is correct')
-      assert.equal(event.read, false, 'read is correct')
 
       // FAILURE: document must have a link
       await await empfangsbekenntnis.sendDocument('', { from: sender }).should.be.rejected;
@@ -54,7 +53,7 @@ contract('Empfangsbekenntnis', ([deployer, sender, reader]) => {
       const docLinkHash = await empfangsbekenntnis.hashLink(1, 'doc1')
       assert.equal(product.documentLinkHash, docLinkHash, 'link is correct')
       assert.equal(product.sender, sender, 'sender is correct')
-      assert.equal(product.read, false, 'read is correct')
+      assert.equal(product.readCount, 0, 'readCount is correct')
     })
 
     it('read documents', async () => {
@@ -68,14 +67,26 @@ contract('Empfangsbekenntnis', ([deployer, sender, reader]) => {
       assert.equal(event.documentLinkHash, docLinkHash, 'link is correct')
       assert.equal(event.sender, sender, 'sender is correct')
       assert.equal(event.reader, reader, 'reader is correct')
-      assert.equal(event.read, true, 'read is correct')
+      assert.equal(event.readCount, 1, 'read is correct')
 
       // FAILURE: Reader tries to read a document that does not exist, i.e., document must have valid id
       await empfangsbekenntnis.readDocument(99, 'doc1', { from: reader }).should.be.rejected;
       // FAILURE: Sender tries to read document, i.e., sender can't read his document
       await empfangsbekenntnis.readDocument(documentCount, 'doc1', { from: sender }).should.be.rejected;
-      // FAILURE: Reader tries to read again, i.e., reader can't read twice
-      await empfangsbekenntnis.readDocument(documentCount, 'doc1', { from: reader }).should.be.rejected;
+    })
+
+    it('read document again', async () => {
+      // SUCCESS: reader reads document
+      result = await empfangsbekenntnis.readDocument(documentCount, 'doc1', { from: reader })
+      
+      // Check logs
+      const event = result.logs[0].args
+      assert.equal(event.id.toNumber(), documentCount.toNumber(), 'id is correct')
+      const docLinkHash = await empfangsbekenntnis.hashLink(1, 'doc1')
+      assert.equal(event.documentLinkHash, docLinkHash, 'link is correct')
+      assert.equal(event.sender, sender, 'sender is correct')
+      assert.equal(event.reader, reader, 'reader is correct')
+      assert.equal(event.readCount, 2, 'read is correct')
     })
 
   })
