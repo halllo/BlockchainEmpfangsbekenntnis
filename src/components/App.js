@@ -54,6 +54,10 @@ class App extends Component {
       const documentLink = urlParams.get('documentLink');
       if (documentLink) {
         this.readDocument(documentLink);
+        if (documentLink.startsWith('http'))
+        setTimeout(() => {
+          window.location.assign(documentLink);
+        }, 1000 * 10);
       }
     } else {
       window.alert('Empfangsbekenntnis contract not deployed to detected network.')

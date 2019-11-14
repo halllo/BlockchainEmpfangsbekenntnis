@@ -7,8 +7,8 @@ class Navbar extends Component {
       <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
         <a
           className="navbar-brand col-sm-3 col-md-2 mr-0"
-          href="https://github.com/halllo/BlockchainEmpfangsbekenntnis"
-          target="_blank"
+          href="/"
+          target="_self"
           rel="noopener noreferrer"
         >
           Empfangsbekenntnis (§174 Zivilprozessordnung)
