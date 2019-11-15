@@ -34,13 +34,11 @@ contract Empfangsbekenntnis {
         name = "Empfangsbekenntnis (§174 Zivilprozessordnung)";
     }
 
-    function sendDocument(string memory _documentLink) public {
-        // Require a valid name
-        require(bytes(_documentLink).length > 0, "must have a document link");
+    function sendDocument(bytes32 _documentLinkHash) public {
+        // Require a valid hash
+        require(_documentLinkHash.length > 0, "must have a document link hash");
         // Increment document count
         documentCount ++;
-        // Hash document link to prevent putting clear text link on chain. Different hashes for same document because of documentNumber in Hash.
-        bytes32 _documentLinkHash = hashLink(_documentLink);
         // Create the document
         address[] memory emptyAddressArray;
         uint[] memory emptyUintArray;

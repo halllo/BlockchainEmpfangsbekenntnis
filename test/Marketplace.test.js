@@ -30,7 +30,8 @@ contract('Empfangsbekenntnis', ([deployer, sender, reader]) => {
     let result, documentCount
 
     before(async () => {
-      result = await empfangsbekenntnis.sendDocument('doc1', { from: sender })
+      const docLinkHash = await empfangsbekenntnis.hashLink('doc1')
+      result = await empfangsbekenntnis.sendDocument(docLinkHash, { from: sender })
       documentCount = await empfangsbekenntnis.documentCount()
     })
 

@@ -52,12 +52,15 @@ class App extends Component {
       
       const urlParams = new URLSearchParams(window.location.search);
       const documentLink = urlParams.get('documentLink');
+      const sendDocumentLink = urlParams.get('sendDocumentLink');
       if (documentLink) {
         this.readDocument(documentLink);
-        if (documentLink.startsWith('http'))
-        setTimeout(() => {
-          window.location.assign(documentLink);
-        }, 1000 * 10);
+        if (documentLink.startsWith('http')) {
+          setTimeout(() => { window.location.assign(documentLink); }, 1000 * 10);
+        }
+      } else if (sendDocumentLink) {
+        this.sendDocument(sendDocumentLink);
+        console.info('share this receive link', window.location.origin + '?documentLink=' + sendDocumentLink);
       }
     } else {
       window.alert('Empfangsbekenntnis contract not deployed to detected network.')
@@ -79,13 +82,21 @@ class App extends Component {
 
   sendDocument(documentLink) {
     this.setState({ loading: true })
-    this.state.empfangsbekenntnis.methods.sendDocument(documentLink).send({ from: this.state.account })
-    .once('receipt', (receipt) => {
-      this.setState({ loading: false })
-    })
+    const documentLinkHashPromise = this.state.empfangsbekenntnis.methods.hashLink(documentLink).call()
+    documentLinkHashPromise.then(
+      documentLinkHash => {
+        this.state.empfangsbekenntnis.methods.sendDocument(documentLinkHash).send({ from: this.state.account })
+          .once('receipt', (receipt) => {
+            this.setState({ loading: false })
+          })
+      },
+      reason => {
+        console.error(reason);
+      }
+    )
   }
 
-  readDocument(documentLink, id, documentLinkHash) {
+  readDocument(documentLink) {
     this.setState({ loading: true })
     if (!documentLink) {
       documentLink = prompt("documentLink");
